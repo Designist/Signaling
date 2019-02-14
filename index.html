@@ -1,0 +1,30 @@
+<html>
+<head><title>Game</title></head>
+<body>
+Testing...
+
+<script>
+  function myFunction() {
+  	var socket = io('http://localhost');
+		socket.on('news', function (data) {
+		console.log(data);
+		socket.emit('my other event', { my: 'hello! you clicked me' });
+	});
+  }
+</script>
+<button onclick="myFunction()">Click me</button>
+
+<div id="text"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io('http://localhost');
+  socket.on('news', function (data) {
+    console.log(data);
+    socket.emit('my other event', { my: 'data' });
+  });
+
+  
+</script>
+</body>
+</html>
