@@ -1,30 +1,63 @@
 <html>
-<head><title>Game</title></head>
-<body>
-Testing...
+  <head>
+    <title>Reference Game</title>
+  </head>
+  <body>
+    <div id="main"></div>
+    <script src="/socket.io/socket.io.js"></script>
 
-<script>
-  function myFunction() {
-  	var socket = io('http://localhost');
-		socket.on('news', function (data) {
-		console.log(data);
-		socket.emit('my other event', { my: 'hello! you clicked me' });
-	});
-  }
-</script>
-<button onclick="myFunction()">Click me</button>
+    <script type="text/javascript">
+      var socket = io('http://localhost');
+      var jsonData = {"trials":[],"ready":0}
+      var bothReady = false
 
-<div id="text"></div>
+      socket.on('update', function (data) {
+        jsonData = data;
+        if (jsonData["ready"] >= 2) {
+          if (!bothReady) {
+            main.innerHTML += "<br/>Both players ready!"
+            bothReady = true
+          }
+          document.getElementById("updateButton").style.display = "none";
+        }
+      });
 
-<script src="/socket.io/socket.io.js"></script>
-<script>
-  var socket = io('http://localhost');
-  socket.on('news', function (data) {
-    console.log(data);
-    socket.emit('my other event', { my: 'data' });
-  });
+      function getRandomInt(max) {
+        return Math.floor(Math.random() * Math.floor(max));
+      }
 
-  
-</script>
-</body>
+      var url = document.location.href.split('/');
+      var role = url[url.length - 1]; // sender or receiver
+
+      var main = document.getElementById("main");
+      if (role == "sender") {
+        main.innerHTML += "You're the sender..."
+        socket.emit('getJson', {});
+        // main.innerHTML += "<br/>" + jsonData["ready"]
+      } else if (role == "receiver") {
+        main.innerHTML += "You're the receiver..."
+      } else {
+        alert("Invalid link.")
+        main.innerHTML += "Please return to experimenter."
+      }
+
+      function myFunction() {
+        var url = document.location.href.split('/');
+        var role = url[url.length - 1];
+
+        socket.emit('addReady', {});
+        document.getElementById("readyButton").style.display = "none";
+      }
+
+      function update() {
+        socket.emit('getJson', {});
+      }
+
+      var t=setInterval(update,500);
+    </script>
+    <button id="readyButton" onclick="myFunction()">Ready</button>
+    <!-- <button id="updateButton" onclick="update()">Check Status</button> -->
+
+    <div id="text"></div>
+  </body>
 </html>
