@@ -1,6 +1,7 @@
 <html>
   <head>
     <title>Reference Game</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
   </head>
   <body>
     <div id="main"></div>
@@ -59,5 +60,45 @@
     <!-- <button id="updateButton" onclick="update()">Check Status</button> -->
 
     <div id="text"></div>
+    <div id="main2" style="width: 400px; height: 600px; background-color: lightblue; border-radius: 25px; border: 2px solid black; text-align: center; margin: auto;">
+      <div id="signalPrompt">
+        <h3><br/>The target shape is: </h3>
+          <div class="triangle" id="shape1" style="width: 0; height: 0; border-left: 50px solid transparent; border-right: 50px solid transparent; border-bottom: 100px solid red; margin: auto;"></div>
+<!--           <div class="triangle" id="shape2" style="width: 0; height: 0; border-left: 50px solid transparent; border-right: 50px solid transparent; border-bottom: 100px solid yellow; margin: auto;"></div>
+          <div class="triangle" id="shape3" style="width: 0; height: 0; border-left: 50px solid transparent; border-right: 50px solid transparent; border-bottom: 100px solid blue; margin: auto;"></div>
+          <div class="triangle" id="shape4" style="width: 0; height: 0; border-left: 50px solid transparent; border-right: 50px solid transparent; border-bottom: 100px solid green; margin: auto;"></div> -->
+        <h3 style="margin-left: 20px; margin-right: 20px;">Please click 1-2 buttons below to signal the target shape:</h3>
+          <script>
+          function click1() {
+              alert("Clicked 1");
+          }
+          function click2() {
+              alert("Clicked 2");
+          }
+          function click3() {
+              alert("Clicked 3");
+          }
+          function click4() {
+              alert("Clicked 4");
+          }
+          function submit() {
+            document.getElementById("signalPrompt").style.display = "none";
+          }
+          </script>
+          <div id="selector" style="width: 200px; height: 200px; background-color: lightgrey; margin: auto;">
+            <div class="symbol" style="width: 80px; height: 80px; background-color: grey; margin: 10px; float: left;" onMouseOver="this.style.backgroundColor='white'" onMouseOut="this.style.backgroundColor='grey'" onclick="click1()"></div>
+            <div class="symbol" style="width: 80px; height: 80px; background-color: grey; margin: 10px; float: left;" onMouseOver="this.style.backgroundColor='white'" onMouseOut="this.style.backgroundColor='grey'" onclick="click2()"></div>
+            <div class="symbol" style="width: 80px; height: 80px; background-color: grey; margin: 10px; float: left;" onMouseOver="this.style.backgroundColor='white'" onMouseOut="this.style.backgroundColor='grey'" onclick="click3()"></div>
+            <div class="symbol" style="width: 80px; height: 80px; background-color: grey; margin: 10px; float: left;" onMouseOver="this.style.backgroundColor='white'" onMouseOut="this.style.backgroundColor='grey'" onclick="click4()"></div>
+          </div>
+          <script type="stylesheet/css">
+            .symbol:hover {
+              background-color: black;
+            }
+          </script>
+          <h3>Click submit when done:</h3>
+          <button id="submitButton" onclick="submit()" style="margin: auto;">Submit</button>
+        </div>
+    </div>
   </body>
 </html>
