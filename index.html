@@ -29,111 +29,121 @@
         //   document.getElementById("updateButton").style.display = "none";
         // }
 
-        var objects = jsonData["objects"]
-        var guesses = jsonData["guesses"]
-        if (guesses.length > 0) {
-          if (guesses.length == objects.length) {
-            if (guesses[guesses.length - 1] == objects[objects.length - 1]) {
-              document.getElementById("correctGuess").style.display = "inline-block";
-              document.getElementById("wrongGuess").style.display = "none";
-            } else {
-              document.getElementById("correctGuess").style.display = "none";
-              document.getElementById("wrongGuess").style.display = "inline-block";
-            }
-          } else {
-            if (guesses[guesses.length - 1] == objects[objects.length - 2]) {
-              document.getElementById("correctGuess").style.display = "inline-block";
-              document.getElementById("wrongGuess").style.display = "none";
-            } else {
-              document.getElementById("correctGuess").style.display = "none";
-              document.getElementById("wrongGuess").style.display = "inline-block";
-            }
-          }
-        }
-
-        if (role == "sender") {
-          if (jsonData["turn"] == "sender") {
-            document.getElementById("senderWaiting").style.display = "none";
-            document.getElementById("senderPrompt").style.display = "inline";
-
-
-            if (jsonData["objects"].length <= jsonData["iter"] && !jsonData["object_shown"]) {
-              // alert(JSON.stringify(jsonData["object_shown"]))
-              for (var i=1; i<=16; i++) {
-                object_name = "obj" + i.toString()
-                document.getElementById(object_name).style.display = "none";
-              }
-              object = getRandomInt(16) + 1;
-              temp_data = {"object": object}
-              socket.emit('new_object', temp_data);
-
-              object_name = "obj" + object.toString()
-              document.getElementById(object_name).style.display = "flex";
-            }
-          } else {
-            document.getElementById("senderPrompt").style.display = "none";
-            document.getElementById("senderWaiting").style.display = "inline";
-          }
-        } else if (role == "receiver") {
-          if (jsonData["turn"] == "receiver") {
-            document.getElementById("receiverWaiting").style.display = "none";
-            document.getElementById("receiverPrompt").style.display = "inline";
-
-            if (jsonData["show_signal"]) {
-              iter = jsonData["iter"]
-              signal = jsonData["trials"][iter]
-              setTimeout(function() {
-                if (signal[0] == 1) {
-                  document.getElementById("sig1").style.background = "white";
-                } else if (signal[0] == 2) {
-                  document.getElementById("sig2").style.background = "white";
-                } else if (signal[0] == 3) {
-                  document.getElementById("sig3").style.background = "white";
-                } else if (signal[0] == 4) {
-                  document.getElementById("sig4").style.background = "white";
-                } else {
-                  alert("Broken Signal. Please return to experimenter.")
-                }
-
-                setTimeout(function() {
-                  document.getElementById("sig1").style.background = "grey";
-                  document.getElementById("sig2").style.background = "grey";
-                  document.getElementById("sig3").style.background = "grey";
-                  document.getElementById("sig4").style.background = "grey";
-
-                  if (signal.length > 1) {
-                    setTimeout(function() {
-                      if (signal[1] == 1) {
-                        document.getElementById("sig1").style.background = "white";
-                      } else if (signal[1] == 2) {
-                        document.getElementById("sig2").style.background = "white";
-                      } else if (signal[1] == 3) {
-                        document.getElementById("sig3").style.background = "white";
-                      } else if (signal[1] == 4) {
-                        document.getElementById("sig4").style.background = "white";
-                      } else {
-                        alert("Broken Signal. Please return to experimenter.")
-                      }
-
-                      setTimeout(function() {
-                        document.getElementById("sig1").style.background = "grey";
-                        document.getElementById("sig2").style.background = "grey";
-                        document.getElementById("sig3").style.background = "grey";
-                        document.getElementById("sig4").style.background = "grey";
-                      }, 500);
-                    }, 500);
-                  }
-                }, 500)
-              }, 500)
-              socket.emit('hide_signal', {});
-            }
-          } else {
-            document.getElementById("receiverPrompt").style.display = "none";
-            document.getElementById("receiverWaiting").style.display = "inline";
-          }
+        if (jsonData["game_over"]) {
+          document.getElementById("senderWaiting").style.display = "none";
+          document.getElementById("senderPrompt").style.display = "none";
+          document.getElementById("receiverWaiting").style.display = "none";
+          document.getElementById("receiverPrompt").style.display = "none";
+          document.getElementById("congrats").style.display = "inline";
         } else {
-          alert("Invalid link. Please return to experimenter.")
+          var objects = jsonData["objects"]
+          var guesses = jsonData["guesses"]
+          if (guesses.length > 0) {
+            if (guesses.length == objects.length) {
+              if (guesses[guesses.length - 1] == objects[objects.length - 1]) {
+                document.getElementById("correctGuess").style.display = "inline-block";
+                document.getElementById("wrongGuess").style.display = "none";
+              } else {
+                document.getElementById("correctGuess").style.display = "none";
+                document.getElementById("wrongGuess").style.display = "inline-block";
+              }
+            } else {
+              if (guesses[guesses.length - 1] == objects[objects.length - 2]) {
+                document.getElementById("correctGuess").style.display = "inline-block";
+                document.getElementById("wrongGuess").style.display = "none";
+              } else {
+                document.getElementById("correctGuess").style.display = "none";
+                document.getElementById("wrongGuess").style.display = "inline-block";
+              }
+            }
+          }
+
+          if (role == "sender") {
+            if (jsonData["turn"] == "sender") {
+              document.getElementById("senderWaiting").style.display = "none";
+              document.getElementById("senderPrompt").style.display = "inline";
+
+
+              if (jsonData["objects"].length <= jsonData["iter"] && !jsonData["object_shown"]) {
+                // alert(JSON.stringify(jsonData["object_shown"]))
+                for (var i=1; i<=16; i++) {
+                  object_name = "obj" + i.toString()
+                  document.getElementById(object_name).style.display = "none";
+                }
+                object = getRandomInt(16) + 1;
+                temp_data = {"object": object}
+                socket.emit('new_object', temp_data);
+
+                object_name = "obj" + object.toString()
+                document.getElementById(object_name).style.display = "flex";
+              }
+            } else {
+              document.getElementById("senderPrompt").style.display = "none";
+              document.getElementById("senderWaiting").style.display = "inline";
+            }
+          } else if (role == "receiver") {
+            if (jsonData["turn"] == "receiver") {
+              document.getElementById("receiverWaiting").style.display = "none";
+              document.getElementById("receiverPrompt").style.display = "inline";
+
+              if (jsonData["show_signal"]) {
+                iter = jsonData["iter"]
+                signal = jsonData["trials"][iter]
+                setTimeout(function() {
+                  if (signal[0] == 1) {
+                    document.getElementById("sig1").style.background = "white";
+                  } else if (signal[0] == 2) {
+                    document.getElementById("sig2").style.background = "white";
+                  } else if (signal[0] == 3) {
+                    document.getElementById("sig3").style.background = "white";
+                  } else if (signal[0] == 4) {
+                    document.getElementById("sig4").style.background = "white";
+                  } else {
+                    alert("Broken Signal. Please return to experimenter.")
+                  }
+
+                  setTimeout(function() {
+                    document.getElementById("sig1").style.background = "grey";
+                    document.getElementById("sig2").style.background = "grey";
+                    document.getElementById("sig3").style.background = "grey";
+                    document.getElementById("sig4").style.background = "grey";
+
+                    if (signal.length > 1) {
+                      setTimeout(function() {
+                        if (signal[1] == 1) {
+                          document.getElementById("sig1").style.background = "white";
+                        } else if (signal[1] == 2) {
+                          document.getElementById("sig2").style.background = "white";
+                        } else if (signal[1] == 3) {
+                          document.getElementById("sig3").style.background = "white";
+                        } else if (signal[1] == 4) {
+                          document.getElementById("sig4").style.background = "white";
+                        } else {
+                          alert("Broken Signal. Please return to experimenter.")
+                        }
+
+                        setTimeout(function() {
+                          document.getElementById("sig1").style.background = "grey";
+                          document.getElementById("sig2").style.background = "grey";
+                          document.getElementById("sig3").style.background = "grey";
+                          document.getElementById("sig4").style.background = "grey";
+                        }, 500);
+                      }, 500);
+                    }
+                  }, 500)
+                }, 500)
+                socket.emit('hide_signal', {});
+              }
+            } else {
+              document.getElementById("receiverPrompt").style.display = "none";
+              document.getElementById("receiverWaiting").style.display = "inline";
+            }
+          } else {
+            alert("Invalid link. Please return to experimenter.")
+          }
         }
+
+        
       });
 
       socket.on('submit_success', function (data) {
@@ -185,7 +195,11 @@
 
     <div id="text"></div>
     <div id="centerwrap" style="width: 600px; margin: auto;">
+
       <div id="main2" style="width: 400px; height: 700px; background-color: lightblue; border-radius: 25px; border: 2px solid black; text-align: center; margin: auto; float: center; display: inline-block;">
+        <div id="congrats" style="display: none">
+          <h1 style="margin: 10px">Congrats! Game over. Please return to experimenter.</h1>
+        </div>
         <div id="senderPrompt" style="display: none;">
           <h3><br/>The target shape is: </h3><br/>
             <div class="triangle" id="obj1" style="width: 0; height: 0; border-left: 50px solid transparent; border-right: 50px solid transparent; border-bottom: 100px solid red; margin: auto; display: none;"></div>

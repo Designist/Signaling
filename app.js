@@ -22,6 +22,7 @@ function handler (req, res) {
 
 io.on('connection', function (socket) {
   // socket.emit('update', { hello: 'world' });
+  threshold = 20 // number correct to end game
   file={
     "trials": [[]],
     "objects": [],
@@ -30,7 +31,9 @@ io.on('connection', function (socket) {
     "turn": "sender",
     "iter": 0,
     "show_signal": false,
-    "object_shown": false}
+    "object_shown": false,
+    "game_over": false
+  }
 
   fs.writeFile(fileName, JSON.stringify(file), function (err) {
     if (err) return console.log(err);
@@ -144,16 +147,53 @@ io.on('connection', function (socket) {
     }
   });
 
+  function get_accuracy(num) {
+    // get accuracy % over last num trials
+    counter = 0
+    num_correct = 0
+    val = file["iter"] - 1
+    while (counter < num && val >= 0) {
+      console.log(val)
+      if (file["guesses"][val] == file["objects"][val]) {
+        num_correct += 1
+      }
+      counter += 1
+      val = file["iter"] - counter - 1
+    }
+    acc = num_correct/counter
+    // socket.emit('show', acc.toString())
+    return acc
+  }
+
+  function win() {
+    fs.writeFile(fileName, JSON.stringify(file), function (err) {
+      if (err) return console.log(err);
+      console.log(JSON.stringify(file));
+      console.log('Writing to ' + fileName);
+      socket.emit('update', file);
+    });
+  }
+
+  function new_iter() {
+    file["iter"] += 1;
+    file["trials"].push([])
+    file["turn"] = "sender";
+    file["object_shown"] = false;
+
+    acc = get_accuracy(threshold)
+    if (acc > 0.99 && file["objects"].length > threshold) { 
+      file["game_over"] = true
+      win()
+    }
+  }
+
   socket.on('guess', function (data) {
     if (file["guesses"].length < file["objects"].length) {
       file["guesses"].push(data["val"])
     } else {
       socket.emit('show', "Too many guesses!");
     }
-    file["iter"] += 1;
-    file["trials"].push([])
-    file["turn"] = "sender";
-    file["object_shown"] = false;
+    new_iter()
     socket.emit('update', file);
   });
 

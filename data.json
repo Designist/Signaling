@@ -1,1 +1,1 @@
-{"trials":[[]],"objects":[],"guesses":[],"num_symbols":0,"turn":"sender","iter":0,"show_signal":false,"object_shown":false}
+{"trials":[[1],[4],[4],[4],[]],"objects":[3,10,5,16],"guesses":[3,10,5,16],"num_symbols":0,"turn":"sender","iter":4,"show_signal":false,"object_shown":false,"game_over":true}
