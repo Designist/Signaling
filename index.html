@@ -8,39 +8,159 @@
     <script src="/socket.io/socket.io.js"></script>
 
     <script type="text/javascript">
-      var socket = io('http://localhost');
-      var jsonData = {"trials":[],"ready":0}
-      var bothReady = false
-
-      socket.on('update', function (data) {
-        jsonData = data;
-        if (jsonData["ready"] >= 2) {
-          if (!bothReady) {
-            main.innerHTML += "<br/>Both players ready!"
-            bothReady = true
-          }
-          document.getElementById("updateButton").style.display = "none";
-        }
-      });
-
       function getRandomInt(max) {
         return Math.floor(Math.random() * Math.floor(max));
       }
 
+      var socket = io('http://localhost');
+      var jsonData = {"trials":[],"ready":0}
+      var bothReady = false
       var url = document.location.href.split('/');
       var role = url[url.length - 1]; // sender or receiver
-
       var main = document.getElementById("main");
-      if (role == "sender") {
-        main.innerHTML += "You're the sender..."
-        socket.emit('getJson', {});
-        // main.innerHTML += "<br/>" + jsonData["ready"]
-      } else if (role == "receiver") {
-        main.innerHTML += "You're the receiver..."
-      } else {
-        alert("Invalid link.")
-        main.innerHTML += "Please return to experimenter."
-      }
+
+      socket.on('update', function (data) {
+        jsonData = data;
+        // if (jsonData["ready"] >= 2) {
+        //   if (!bothReady) {
+        //     main.innerHTML += "<br/>Both players ready!"
+        //     bothReady = true
+        //   }
+        //   document.getElementById("updateButton").style.display = "none";
+        // }
+
+        var objects = jsonData["objects"]
+        var guesses = jsonData["guesses"]
+        if (guesses.length > 0) {
+          if (guesses.length == objects.length) {
+            if (guesses[guesses.length - 1] == objects[objects.length - 1]) {
+              document.getElementById("correctGuess").style.display = "inline-block";
+              document.getElementById("wrongGuess").style.display = "none";
+            } else {
+              document.getElementById("correctGuess").style.display = "none";
+              document.getElementById("wrongGuess").style.display = "inline-block";
+            }
+          } else {
+            if (guesses[guesses.length - 1] == objects[objects.length - 2]) {
+              document.getElementById("correctGuess").style.display = "inline-block";
+              document.getElementById("wrongGuess").style.display = "none";
+            } else {
+              document.getElementById("correctGuess").style.display = "none";
+              document.getElementById("wrongGuess").style.display = "inline-block";
+            }
+          }
+        }
+
+        if (role == "sender") {
+          if (jsonData["turn"] == "sender") {
+            document.getElementById("senderWaiting").style.display = "none";
+            document.getElementById("senderPrompt").style.display = "inline";
+
+
+            if (jsonData["objects"].length <= jsonData["iter"] && !jsonData["object_shown"]) {
+              // alert(JSON.stringify(jsonData["object_shown"]))
+              for (var i=1; i<=16; i++) {
+                object_name = "obj" + i.toString()
+                document.getElementById(object_name).style.display = "none";
+              }
+              object = getRandomInt(16) + 1;
+              temp_data = {"object": object}
+              socket.emit('new_object', temp_data);
+
+              object_name = "obj" + object.toString()
+              document.getElementById(object_name).style.display = "flex";
+            }
+          } else {
+            document.getElementById("senderPrompt").style.display = "none";
+            document.getElementById("senderWaiting").style.display = "inline";
+          }
+        } else if (role == "receiver") {
+          if (jsonData["turn"] == "receiver") {
+            document.getElementById("receiverWaiting").style.display = "none";
+            document.getElementById("receiverPrompt").style.display = "inline";
+
+            if (jsonData["show_signal"]) {
+              iter = jsonData["iter"]
+              signal = jsonData["trials"][iter]
+              setTimeout(function() {
+                if (signal[0] == 1) {
+                  document.getElementById("sig1").style.background = "white";
+                } else if (signal[0] == 2) {
+                  document.getElementById("sig2").style.background = "white";
+                } else if (signal[0] == 3) {
+                  document.getElementById("sig3").style.background = "white";
+                } else if (signal[0] == 4) {
+                  document.getElementById("sig4").style.background = "white";
+                } else {
+                  alert("Broken Signal. Please return to experimenter.")
+                }
+
+                setTimeout(function() {
+                  document.getElementById("sig1").style.background = "grey";
+                  document.getElementById("sig2").style.background = "grey";
+                  document.getElementById("sig3").style.background = "grey";
+                  document.getElementById("sig4").style.background = "grey";
+
+                  if (signal.length > 1) {
+                    setTimeout(function() {
+                      if (signal[1] == 1) {
+                        document.getElementById("sig1").style.background = "white";
+                      } else if (signal[1] == 2) {
+                        document.getElementById("sig2").style.background = "white";
+                      } else if (signal[1] == 3) {
+                        document.getElementById("sig3").style.background = "white";
+                      } else if (signal[1] == 4) {
+                        document.getElementById("sig4").style.background = "white";
+                      } else {
+                        alert("Broken Signal. Please return to experimenter.")
+                      }
+
+                      setTimeout(function() {
+                        document.getElementById("sig1").style.background = "grey";
+                        document.getElementById("sig2").style.background = "grey";
+                        document.getElementById("sig3").style.background = "grey";
+                        document.getElementById("sig4").style.background = "grey";
+                      }, 500);
+                    }, 500);
+                  }
+                }, 500)
+              }, 500)
+              socket.emit('hide_signal', {});
+            }
+          } else {
+            document.getElementById("receiverPrompt").style.display = "none";
+            document.getElementById("receiverWaiting").style.display = "inline";
+          }
+        } else {
+          alert("Invalid link. Please return to experimenter.")
+        }
+      });
+
+      socket.on('submit_success', function (data) {
+        // alert("#winning")
+        document.getElementById("senderPrompt").style.display = "none";
+        // Add waiting
+      });
+
+      socket.on('submit_failure', function (data) {
+        alert("Not enough // too many symbols. Try again.")
+        socket.emit('cleartrial', {});
+      });
+
+      socket.on('show', function (data) {
+        alert(data)
+      });
+
+      // if (role == "sender") {
+      //   main.innerHTML += "You're the sender..."
+      //   socket.emit('getJson', {});
+      //   // main.innerHTML += "<br/>" + jsonData["ready"]
+      // } else if (role == "receiver") {
+      //   main.innerHTML += "You're the receiver..."
+      // } else {
+      //   alert("Invalid link.")
+      //   main.innerHTML += "Please return to experimenter."
+      // }
 
       function myFunction() {
         var url = document.location.href.split('/');
@@ -54,51 +174,208 @@
         socket.emit('getJson', {});
       }
 
-      var t=setInterval(update,500);
+      function submit() {
+        socket.emit('submit', {});
+      }
+
+      var t=setInterval(update,250);
     </script>
-    <button id="readyButton" onclick="myFunction()">Ready</button>
+    <!-- <button id="readyButton" onclick="myFunction()">Ready</button> -->
     <!-- <button id="updateButton" onclick="update()">Check Status</button> -->
 
     <div id="text"></div>
-    <div id="main2" style="width: 400px; height: 600px; background-color: lightblue; border-radius: 25px; border: 2px solid black; text-align: center; margin: auto;">
-      <div id="signalPrompt">
-        <h3><br/>The target shape is: </h3>
-          <div class="triangle" id="shape1" style="width: 0; height: 0; border-left: 50px solid transparent; border-right: 50px solid transparent; border-bottom: 100px solid red; margin: auto;"></div>
-<!--           <div class="triangle" id="shape2" style="width: 0; height: 0; border-left: 50px solid transparent; border-right: 50px solid transparent; border-bottom: 100px solid yellow; margin: auto;"></div>
-          <div class="triangle" id="shape3" style="width: 0; height: 0; border-left: 50px solid transparent; border-right: 50px solid transparent; border-bottom: 100px solid blue; margin: auto;"></div>
-          <div class="triangle" id="shape4" style="width: 0; height: 0; border-left: 50px solid transparent; border-right: 50px solid transparent; border-bottom: 100px solid green; margin: auto;"></div> -->
-        <h3 style="margin-left: 20px; margin-right: 20px;">Please click 1-2 buttons below to signal the target shape:</h3>
-          <script>
-          function click1() {
-              alert("Clicked 1");
-          }
-          function click2() {
-              alert("Clicked 2");
-          }
-          function click3() {
-              alert("Clicked 3");
-          }
-          function click4() {
-              alert("Clicked 4");
-          }
-          function submit() {
-            document.getElementById("signalPrompt").style.display = "none";
-          }
-          </script>
-          <div id="selector" style="width: 200px; height: 200px; background-color: lightgrey; margin: auto;">
-            <div class="symbol" style="width: 80px; height: 80px; background-color: grey; margin: 10px; float: left;" onMouseOver="this.style.backgroundColor='white'" onMouseOut="this.style.backgroundColor='grey'" onclick="click1()"></div>
-            <div class="symbol" style="width: 80px; height: 80px; background-color: grey; margin: 10px; float: left;" onMouseOver="this.style.backgroundColor='white'" onMouseOut="this.style.backgroundColor='grey'" onclick="click2()"></div>
-            <div class="symbol" style="width: 80px; height: 80px; background-color: grey; margin: 10px; float: left;" onMouseOver="this.style.backgroundColor='white'" onMouseOut="this.style.backgroundColor='grey'" onclick="click3()"></div>
-            <div class="symbol" style="width: 80px; height: 80px; background-color: grey; margin: 10px; float: left;" onMouseOver="this.style.backgroundColor='white'" onMouseOut="this.style.backgroundColor='grey'" onclick="click4()"></div>
-          </div>
-          <script type="stylesheet/css">
-            .symbol:hover {
-              background-color: black;
+    <div id="centerwrap" style="width: 600px; margin: auto;">
+      <div id="main2" style="width: 400px; height: 700px; background-color: lightblue; border-radius: 25px; border: 2px solid black; text-align: center; margin: auto; float: center; display: inline-block;">
+        <div id="senderPrompt" style="display: none;">
+          <h3><br/>The target shape is: </h3><br/>
+            <div class="triangle" id="obj1" style="width: 0; height: 0; border-left: 50px solid transparent; border-right: 50px solid transparent; border-bottom: 100px solid red; margin: auto; display: none;"></div>
+            <div class="triangle" id="obj2" style="width: 0; height: 0; border-left: 50px solid transparent; border-right: 50px solid transparent; border-bottom: 100px solid green; margin: auto; display: none;"></div>
+            <div class="triangle" id="obj3" style="width: 0; height: 0; border-left: 50px solid transparent; border-right: 50px solid transparent; border-bottom: 100px solid blue; margin: auto; display: none;"></div>
+            <div class="triangle" id="obj4" style="width: 0; height: 0; border-left: 50px solid transparent; border-right: 50px solid transparent; border-bottom: 100px solid yellow; margin: auto; display: none;"></div>
+
+            <div class="square" id="obj5" style="width: 100px; height: 100px; background: red; margin: auto; display: none;"></div>
+            <div class="square" id="obj6" style="width: 100px; height: 100px; background: green; margin: auto; display: none;"></div>
+            <div class="square" id="obj7" style="width: 100px; height: 100px; background: blue; margin: auto; display: none;"></div>
+            <div class="square" id="obj8" style="width: 100px; height: 100px; background: yellow; margin: auto; display: none;"></div>
+
+            <div class="circle" id="obj9" style="width: 100px; height: 100px; background: red; margin: auto; border-radius: 50%; display: none;"></div>
+            <div class="circle" id="obj10" style="width: 100px; height: 100px; background: green; margin: auto; border-radius: 50%; display: none;"></div>
+            <div class="circle" id="obj11" style="width: 100px; height: 100px; background: blue; margin: auto; border-radius: 50%; display: none;"></div>
+            <div class="circle" id="obj12" style="width: 100px; height: 100px; background: yellow; margin: auto; border-radius: 50%; display: none;"></div>
+
+            <div class="wrap0"><div class="bighex" id="obj13" style="background: red; margin: auto; display: none;"></div></div>
+            <div class="wrap0"><div class="bighex" id="obj14" style="background: green; margin: auto; display: none;"></div></div>
+            <div class="wrap0"><div class="bighex" id="obj15" style="background: blue; margin: auto; display: none;"></div></div>
+            <div class="wrap0"><div class="bighex" id="obj16" style="background: yellow; margin: auto; display: none;"></div></div><br/>
+
+            <style>
+              .bighex {
+                width: 100px;
+                height: 55px;
+                position: relative;
+              }
+              .bighex:before {
+                content: "";
+                position: absolute;
+                top: -25px;
+                left: 0;
+                width: 0;
+                height: 0;
+                border-left: 50px solid transparent;
+                border-right: 50px solid transparent;
+              }
+              .bighex:after {
+                content: "";
+                position: absolute;
+                bottom: -25px;
+                left: 0;
+                width: 0;
+                height: 0;
+                border-left: 50px solid transparent;
+                border-right: 50px solid transparent;
+              } 
+              #obj13:before { border-bottom: 25px solid red; }
+              #obj13:after { border-top: 25px solid red; }
+              #obj14:before { border-bottom: 25px solid green; }
+              #obj14:after { border-top: 25px solid green; }
+              #obj15:before { border-bottom: 25px solid blue; }
+              #obj15:after { border-top: 25px solid blue; }
+              #obj16:before { border-bottom: 25px solid yellow; }
+              #obj16:after { border-top: 25px solid yellow; }
+            </style>
+
+          <h3 style="margin-left: 20px; margin-right: 20px;">Click 1-2 buttons to signal:</h3>
+            <script>
+            function click1() {
+                socket.emit('click1', {});
+                // alert("Clicked 1");
             }
-          </script>
-          <h3>Click submit when done:</h3>
-          <button id="submitButton" onclick="submit()" style="margin: auto;">Submit</button>
-        </div>
-    </div>
+            function click2() {
+                socket.emit('click2', {});
+                // alert("Clicked 2");
+            }
+            function click3() {
+                socket.emit('click3', {});
+                // alert("Clicked 3");
+            }
+            function click4() {
+                socket.emit('click4', {});
+                // alert("Clicked 4");
+            }
+            function guess(val) {
+              socket.emit('guess', {"val": val});
+              // alert("Guessed " + val.toString());
+            }
+            function clearx() {
+              socket.emit('cleartrial', {});
+            }
+            function showdata() {
+              socket.emit('dataalert', {});
+            }
+            function showsignal() {
+              socket.emit('show_signal', {});
+            }
+            </script>
+            <div id="selector" style="width: 200px; height: 200px; background-color: lightgrey; margin: auto;">
+              <div class="symbol" style="width: 80px; height: 80px; background-color: grey; margin: 10px; float: left;" onMouseOver="this.style.backgroundColor='white'" onMouseOut="this.style.backgroundColor='grey'" onclick="click1()"></div>
+              <div class="symbol" style="width: 80px; height: 80px; background-color: grey; margin: 10px; float: left;" onMouseOver="this.style.backgroundColor='white'" onMouseOut="this.style.backgroundColor='grey'" onclick="click2()"></div>
+              <div class="symbol" style="width: 80px; height: 80px; background-color: grey; margin: 10px; float: left;" onMouseOver="this.style.backgroundColor='white'" onMouseOut="this.style.backgroundColor='grey'" onclick="click3()"></div>
+              <div class="symbol" style="width: 80px; height: 80px; background-color: grey; margin: 10px; float: left;" onMouseOver="this.style.backgroundColor='white'" onMouseOut="this.style.backgroundColor='grey'" onclick="click4()"></div>
+            </div>
+            <script type="stylesheet/css">
+              .symbol:hover {
+                background-color: black;
+              }
+            </script>
+            <h3>Click submit when done:</h3>
+            <button id="submitButton" onclick="submit()" style="margin: auto;">Submit</button>
+            <button id="clearButton" onclick="clearx()" style="margin: auto;">Refresh Trial</button>
+            <button id="dataButton" onclick="showdata()" style="margin: auto;">Show Data</button>
+          </div>
+          <div id="senderWaiting" style="display: none;">
+            <h4>Waiting for receiver...</h4>
+          </div>
+          <div id="receiverWaiting" style="display: none;">
+            <h4>Waiting for sender...</h4>
+          </div>
+          <div id="receiverPrompt" style="display: none;">
+            <h3>Signal:</h3>
+              <div id="signal" style="width: 200px; height: 200px; background-color: lightgrey; margin: auto;">
+              <div id="sig1" style="width: 80px; height: 80px; background-color: grey; margin: 10px; float: left;"></div>
+              <div id="sig2" style="width: 80px; height: 80px; background-color: grey; margin: 10px; float: left;"></div>
+              <div id="sig3" style="width: 80px; height: 80px; background-color: grey; margin: 10px; float: left;"></div>
+              <div id="sig4" style="width: 80px; height: 80px; background-color: grey; margin: 10px; float: left;"></div>
+            </div>
+            <br/>
+            <h3>Guess:</h3>
+            <div id="guessShapes" style="display:grid; grid-template-columns: auto auto auto auto; grid-column-gap: 0px; grid-row-gap: 40px;">
+                <div class="triangle" id="shape1" onclick="guess(1)" style="cursor: pointer; width: 0; height: 0; border-left: 25px solid transparent; border-right: 25px solid transparent; border-bottom: 40px solid red; margin: auto; display: inline-grid;"></div>
+                <div class="triangle" id="shape2" onclick="guess(2)" style="cursor: pointer; width: 0; height: 0; border-left: 25px solid transparent; border-right: 25px solid transparent; border-bottom: 40px solid green; margin: auto; display: inline-grid;"></div>
+                <div class="triangle" id="shape3" onclick="guess(3)" style="cursor: pointer; width: 0; height: 0; border-left: 25px solid transparent; border-right: 25px solid transparent; border-bottom: 40px solid blue; margin: auto; display: inline-grid;"></div>
+                <div class="triangle" id="shape4" onclick="guess(4)" style="cursor: pointer; width: 0; height: 0; border-left: 25px solid transparent; border-right: 25px solid transparent; border-bottom: 40px solid yellow; margin: auto; display: inline-grid;"></div>
+                
+                <div class="square" id="shape5" onclick="guess(5)" style="cursor: pointer; width: 40px; height: 40px; background: red; margin: auto; display: inline-grid;"></div>
+                <div class="square" id="shape6" onclick="guess(6)" style="cursor: pointer; width: 40px; height: 40px; background: green; margin: auto; display: inline-grid;"></div>
+                <div class="square" id="shape7" onclick="guess(7)" style="cursor: pointer; width: 40px; height: 40px; background: blue; margin: auto; display: inline-grid;"></div>
+                <div class="square" id="shape8" onclick="guess(8)" style="cursor: pointer; width: 40px; height: 40px; background: yellow; margin: auto; display: inline-grid;"></div>
+
+                <div class="circle" id="shape9" onclick="guess(9)" style="cursor: pointer; width: 40px; height: 40px; background: red; margin: auto; display: inline-grid; border-radius: 50%;"></div>
+                <div class="circle" id="shape10" onclick="guess(10)" style="cursor: pointer; width: 40px; height: 40px; background: green; margin: auto; display: inline-grid; border-radius: 50%;"></div>
+                <div class="circle" id="shape11" onclick="guess(11)" style="cursor: pointer; width: 40px; height: 40px; background: blue; margin: auto; display: inline-grid; border-radius: 50%;"></div>
+                <div class="circle" id="shape12" onclick="guess(12)" style="cursor: pointer; width: 40px; height: 40px; background: yellow; margin: auto; display: inline-grid; border-radius: 50%;"></div>
+
+                <div class="hexagon" id="shape13" onclick="guess(13)" style="cursor: pointer; background: red; margin: auto; display: inline-grid;"></div>
+                <div class="hexagon" id="shape14" onclick="guess(14)" style="cursor: pointer; background: green; margin: auto; display: inline-grid;"></div>
+                <div class="hexagon" id="shape15" onclick="guess(15)" style="cursor: pointer; background: blue; margin: auto; display: inline-grid; "></div>
+                <div class="hexagon" id="shape16" onclick="guess(16)" style="cursor: pointer; background: yellow; margin: auto; display: inline-grid;"></div>
+                <style>
+                  .hexagon {
+                    width: 40px;
+                    height: 23px;
+                    position: relative;
+                  }
+                  .hexagon:before {
+                    content: "";
+                    position: absolute;
+                    top: -10px;
+                    left: 0;
+                    width: 0;
+                    height: 0;
+                    border-left: 20px solid transparent;
+                    border-right: 20px solid transparent;
+                  }
+                  .hexagon:after {
+                    content: "";
+                    position: absolute;
+                    bottom: -10px;
+                    left: 0;
+                    width: 0;
+                    height: 0;
+                    border-left: 20px solid transparent;
+                    border-right: 20px solid transparent;
+                  } 
+                  #shape13:before { border-bottom: 10px solid red; }
+                  #shape13:after { border-top: 10px solid red; }
+                  #shape14:before { border-bottom: 10px solid green; }
+                  #shape14:after { border-top: 10px solid green; }
+                  #shape15:before { border-bottom: 10px solid blue; }
+                  #shape15:after { border-top: 10px solid blue; }
+                  #shape16:before { border-bottom: 10px solid yellow; }
+                  #shape16:after { border-top: 10px solid yellow; }
+                </style>
+            </div>
+            <br/>
+            <br/>
+            <button id="showSignal" onclick="showsignal()" style="margin: auto;">Replay Signal</button>
+          </div>
+      </div>
+      <div id="correctGuess" style="width: 150px; height: 100px; background-color: lightblue; border-radius: 25px; border: 2px solid black; display: inline-block; float: right; padding: 20px; text-align: center; display: none;">
+        <b>Last guess correct!</b>
+        <h1 style=" color: green;"><span>&#10003;</span></h1>
+      </div>
+      <div id="wrongGuess" style="width: 150px; height: 100px; background-color: lightblue; border-radius: 25px; border: 2px solid black; display: inline-block; float: right; padding: 20px; text-align: center; display: none;">
+        <b>Last guess wrong!</b>
+        <h1 style=" color: red;"><span>&#10060;</span></h1>
+      </div>
   </body>
 </html>
