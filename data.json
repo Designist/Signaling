@@ -1,1 +1,4 @@
-{"trials":[[1],[4],[4],[4],[]],"objects":[3,10,5,16],"guesses":[3,10,5,16],"num_symbols":0,"turn":"sender","iter":4,"show_signal":false,"object_shown":false,"game_over":true}
+{"trials":[[4],[1],[4],[]],"objects":[2,1,8],"guesses":[2,1,8],"heldout":[5,7],"num_symbols":0,"turn":"sender","iter":3,"show_signal":false,"object_shown":false,"game_over":true}
+{"trials":[[4],[1],[4],[1],[]],"objects":[2,1,8,7],"guesses":[2,1,8,7],"heldout":[5],"num_symbols":0,"turn":"sender","iter":4,"show_signal":false,"object_shown":false,"game_over":true}
+{"trials":[[]],"objects":[2,9,4,6],"guesses":[],"heldout":[5,7],"num_symbols":0,"turn":"sender","iter":0,"show_signal":false,"object_shown":true,"game_over":false}
+{"trials":[[3,2],[4,3],[]],"objects":[9,4,8],"guesses":[4,7],"heldout":[5,7],"num_symbols":0,"turn":"sender","iter":2,"show_signal":false,"object_shown":true,"game_over":false}
